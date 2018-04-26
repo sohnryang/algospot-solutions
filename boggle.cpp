@@ -14,6 +14,8 @@ const int dy[8] = { -1,  0,  1, -1, 0, 1, -1, 1 };
 
 vector<string> board;
 vector<string> words;
+string word;
+int cache[5][5][10];
 
 void read_input() {
     board.clear();
@@ -40,17 +42,25 @@ bool test_range(int y, int x) {
     return is_x_inrange && is_y_inrange;
 }
 
-bool has_word_in_pos(int y, int x, const string& word) {
-    if (!test_range(y, x)) return false;
-    if (board[y][x] != word[0]) return false;
-    if (word.size() == 1) return true;
+int has_word_in_pos(int y, int x, int index) {
+    if (!test_range(y, x)) return 0;
+
+    int& result = cache[y][x][index];
+    if (result != -1) return result;
+    if (board[y][x] != word[index]) result = 0;
+    if (result != -1) return result;
+    if (word.size() == index + 1) result = 1;
+    if (result != -1) return result;
 
     for (int dir = 0; dir < 8; dir++) {
         int next_y = y + dy[dir], next_x = x + dx[dir];
-        if (has_word_in_pos(next_y, next_x, word.substr(1)))
-            return true;
+        if (has_word_in_pos(next_y, next_x, index + 1)) {
+            result = 1;
+            return result;
+        }
     }
-    return false;
+    result = 0;
+    return result;
 }
 
 int main() {
@@ -64,10 +74,11 @@ int main() {
         for (auto it = words.begin(); it != words.end(); it++) {
             memset(cache, -1, sizeof(cache));
             cout << *it << " ";
+            word = *it;
             bool answer_found = false;
             for (int y = 0; y < 5; y++) {
                 for (int x = 0; x < 5; x++) {
-                    if (has_word_in_pos(y, x, *it)) {
+                    if (has_word_in_pos(y, x, 0) == 1) {
                         answer_found = true;
                         cout << "YES\n";
                         break;
